@@ -53,9 +53,29 @@ Rules:
     sql = interaction.output_text.strip()
     return sql
 
+def run_sql(sql: str):
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+    cur.execute(sql)
+
+    if cur.description is None:
+        conn.commit()
+        result = None
+    else:
+        columns = [desc[0] for desc in cur.description]
+        rows = cur.fetchall()
+        result = {"columns": columns, "rows": rows}
+
+    cur.close()
+    conn.close()
+    return result
 
 if __name__ == "__main__":
     question = "How many orders are pending?"
     sql = generate_sql(question)
     print("Generated SQL:")
     print(sql)
+
+    result = run_sql(sql)
+    print("\nResult:")
+    print(result)
