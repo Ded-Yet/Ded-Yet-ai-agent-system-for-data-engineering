@@ -90,16 +90,13 @@ Do not mention SQL or databases. Just answer naturally.
     return interaction.output_text.strip()
 
 
-if __name__ == "__main__":
-    question = "How many orders are pending?"
+def ask(question: str) -> str:
     sql = generate_sql(question)
-    print("Generated SQL:")
-    print(sql)
-
     result = run_sql(sql)
-    print("\nResult:")
-    print(result)
-
     answer = explain_result(question, sql, result)
-    print("\nAnswer:")
-    print(answer)
+    return answer
+
+
+if __name__ == "__main__":
+    question = input("Ask a question about the store: ")
+    print(ask(question))
