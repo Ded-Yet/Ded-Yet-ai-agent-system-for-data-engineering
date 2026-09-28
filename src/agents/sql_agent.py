@@ -70,6 +70,26 @@ def run_sql(sql: str):
     conn.close()
     return result
 
+
+def explain_result(question: str, sql: str, result) -> str:
+    prompt = f"""A user asked: "{question}"
+
+This SQL query was run:
+{sql}
+
+It returned this result:
+{result}
+
+Write a short, clear, one or two sentence answer to the user's question based on this result.
+Do not mention SQL or databases. Just answer naturally.
+"""
+    interaction = client.interactions.create(
+        model="gemini-3.6-flash",
+        input=prompt,
+    )
+    return interaction.output_text.strip()
+
+
 if __name__ == "__main__":
     question = "How many orders are pending?"
     sql = generate_sql(question)
@@ -79,3 +99,7 @@ if __name__ == "__main__":
     result = run_sql(sql)
     print("\nResult:")
     print(result)
+
+    answer = explain_result(question, sql, result)
+    print("\nAnswer:")
+    print(answer)
