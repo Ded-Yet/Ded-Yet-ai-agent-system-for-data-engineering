@@ -66,4 +66,55 @@ EVAL_QUESTIONS = [
             LIMIT 1;
         """,
     },
+    {
+        "question": "What is the total number of orders placed?",
+        "expected_sql": "SELECT COUNT(*) FROM orders;",
+    },
+    {
+        "question": "How many distinct product categories are there?",
+        "expected_sql": "SELECT COUNT(DISTINCT category) FROM products;",
+    },
+    {
+        "question": "What is the cheapest product?",
+        "expected_sql": "SELECT name FROM products ORDER BY price ASC LIMIT 1;",
+    },
+    {
+        "question": "How many orders were shipped?",
+        "expected_sql": "SELECT COUNT(*) FROM orders WHERE status = 'shipped';",
+    },
+    {
+        "question": "What is the total quantity of items sold across all orders?",
+        "expected_sql": "SELECT SUM(quantity) FROM order_items;",
+    },
+    {
+        "question": "Which customer signed up most recently?",
+        "expected_sql": "SELECT name FROM customers ORDER BY signup_date DESC LIMIT 1;",
+    },
+    {
+        "question": "How many products cost more than 100?",
+        "expected_sql": "SELECT COUNT(*) FROM products WHERE price > 100;",
+    },
+    {
+        "question": "What is the average number of items per order?",
+        "expected_sql": """
+            SELECT AVG(item_count) FROM (
+                SELECT order_id, SUM(quantity) AS item_count
+                FROM order_items
+                GROUP BY order_id
+            ) sub;
+        """,
+    },
+    {
+        "question": "How many customers have never placed an order?",
+        "expected_sql": """
+            SELECT COUNT(*) FROM customers c
+            WHERE NOT EXISTS (
+                SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id
+            );
+        """,
+    },
+    {
+        "question": "What is the total number of distinct customers who have placed at least one order?",
+        "expected_sql": "SELECT COUNT(DISTINCT customer_id) FROM orders;",
+    },
 ]
