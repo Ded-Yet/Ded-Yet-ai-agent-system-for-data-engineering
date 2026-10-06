@@ -47,7 +47,7 @@ Rules:
 - Use only the tables and columns listed above.
 """
     interaction = client.interactions.create(
-        model="gemini-3.6-flash",
+        model="gemini-3.5-flash-lite",
         input=prompt,
     )
     sql = interaction.output_text.strip()
@@ -91,7 +91,7 @@ Write a short, clear, one or two sentence answer to the user's question based on
 Do not mention SQL or databases. Just answer naturally.
 """
     interaction = client.interactions.create(
-        model="gemini-3.6-flash",
+        model="gemini-3.5-flash-lite",
         input=prompt,
     )
     return interaction.output_text.strip()

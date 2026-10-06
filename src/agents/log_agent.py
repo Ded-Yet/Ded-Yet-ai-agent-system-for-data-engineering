@@ -32,7 +32,7 @@ Write a short, clear summary (3-5 sentences) that:
 Do not just repeat the raw numbers mechanically — explain what they mean.
 """
     interaction = client.interactions.create(
-        model="gemini-3.6-flash",
+        model="gemini-3.5-flash-lite",
         input=prompt,
     )
     return interaction.output_text.strip()
