@@ -54,21 +54,28 @@ Rules:
     return sql
 
 def run_sql(sql: str):
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
-    cur.execute(sql)
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+        cur.execute(sql)
 
-    if cur.description is None:
-        conn.commit()
-        result = None
-    else:
-        columns = [desc[0] for desc in cur.description]
-        rows = cur.fetchall()
-        result = {"columns": columns, "rows": rows}
+        if cur.description is None:
+            conn.commit()
+            result = None
+        else:
+            columns = [desc[0] for desc in cur.description]
+            rows = cur.fetchall()
+            result = {"columns": columns, "rows": rows}
 
-    cur.close()
-    conn.close()
-    return result
+        cur.close()
+        conn.close()
+        return result
+
+    except psycopg2.Error as e:
+        if conn:
+            conn.rollback()
+            conn.close()
+        raise ValueError(f"SQL execution failed: {e}") from e
 
 
 def explain_result(question: str, sql: str, result) -> str:
