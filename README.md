@@ -75,3 +75,35 @@ GEMINI_API_KEY=your_key_here
 ```bash
 python src/agents/sql_agent.py
 ```
+
+
+## Example
+
+```
+Ask a question about the store: Which customer spent the most money?
+Dr. Holly Nunez spent the most money, with a total expenditure of $14,865.70.
+```
+
+## Evaluation
+
+The agent is tested against a set of 10 hand-written questions covering counts, filters, joins, and aggregations. Each question has a known-correct SQL query; the agent's generated SQL is run and its result compared against the expected result.
+
+```bash
+python scripts/run_eval.py
+```
+
+**Results:** 20/20 (100%) on the current evaluation set, covering counts, filters, joins, and aggregations.
+
+## Project structure
+
+```
+src/
+  agents/        # AI agents (SQL generation, result explanation)
+scripts/
+  schema.sql     # Database schema
+  seed_data.py   # Generates realistic fake data
+  run_eval.py    # Runs the evaluation suite
+tests/
+  eval_questions.py  # Evaluation question set
+docker-compose.yml   # PostgreSQL container
+```
