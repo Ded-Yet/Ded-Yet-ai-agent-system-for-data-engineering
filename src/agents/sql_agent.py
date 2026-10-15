@@ -54,6 +54,7 @@ Rules:
     return sql
 
 def run_sql(sql: str):
+    conn = None
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
