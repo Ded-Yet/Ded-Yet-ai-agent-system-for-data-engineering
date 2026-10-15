@@ -1,17 +1,20 @@
 # AI Agent System for Data Engineering
 
-A multi-agent system that answers natural language questions about a database by generating and executing SQL, built on top of a real data engineering pipeline (PostgreSQL, Docker, seeded sample data).
+A multi-agent system that answers natural language questions about a database and monitors data quality, built on top of a real data engineering pipeline (PostgreSQL, Docker, seeded sample data).
 
 ## What it does
 
-Ask a plain-English question about an e-commerce dataset — e.g. *"Which customer has spent the most money?"* — and the system:
+This system has two agents:
 
+**1. SQL Agent** — ask a plain-English question about an e-commerce dataset, e.g. *"Which customer has spent the most money?"*, and it:
 1. Understands the database schema
 2. Generates a SQL query using Google's Gemini API
 3. Runs it against a live PostgreSQL database
 4. Returns a clear, natural-language answer
 
-This project is built around the idea that **AI agents are only as good as the data engineering underneath them** — so the focus is on a real pipeline (schema, seeded data, evaluation) rather than just an LLM wrapper.
+**2. Log Analysis Agent** — reads the results of automated data quality checks (nulls, negative prices, invalid references, etc.) and summarizes them in plain English, the way an engineer would report issues to a non-technical manager.
+
+This project is built around the idea that **AI agents are only as good as the data engineering underneath them** — so the focus is on a real pipeline (schema, seeded data, data quality checks, evaluation) rather than just an LLM wrapper.
 
 ## Architecture
 
@@ -26,16 +29,18 @@ Question (English)
       │
       ▼
  Gemini API ──► Natural language answer
+
+
+Data quality checks ──► quality_log.json ──► Gemini API ──► Plain-English report
 ```
 
 ## Tech stack
 
 - **Database:** PostgreSQL 16 (Docker)
-- **LLM:** Google Gemini API (`gemini-3.6-flash`)
+- **LLM:** Google Gemini API (`gemini-3.5-flash-lite`)
 - **Language:** Python
 - **Testing:** pytest
 - **Data generation:** Faker
-
 
 ## Setup
 
@@ -71,11 +76,11 @@ Create a `.env` file in the project root:
 GEMINI_API_KEY=your_key_here
 ```
 
-### 5. Ask a question
+### 5. Run the system
 ```bash
-python src/agents/sql_agent.py
+python src/main.py
 ```
-
+You'll be asked to choose between asking a question about the store data or getting a data quality report.
 
 ## Example
 
@@ -86,24 +91,27 @@ Dr. Holly Nunez spent the most money, with a total expenditure of $14,865.70.
 
 ## Evaluation
 
-The agent is tested against a set of 10 hand-written questions covering counts, filters, joins, and aggregations. Each question has a known-correct SQL query; the agent's generated SQL is run and its result compared against the expected result.
+The SQL agent is tested against a set of 20 hand-written questions covering counts, filters, joins, and aggregations. Each question has a known-correct SQL query; the agent's generated SQL is run and its result compared against the expected result.
 
 ```bash
 python scripts/run_eval.py
 ```
 
-**Results:** 20/20 (100%) on the current evaluation set, covering counts, filters, joins, and aggregations.
+**Results:** 20/20 (100%) on the current evaluation set.
 
 ## Project structure
 
 ```
 src/
-  agents/        # AI agents (SQL generation, result explanation)
+  main.py        # Unified entry point, routes to either agent
+  agents/        # AI agents (SQL generation, result explanation, log analysis)
+  pipelines/     # Data quality check pipeline
 scripts/
-  schema.sql     # Database schema
-  seed_data.py   # Generates realistic fake data
-  run_eval.py    # Runs the evaluation suite
+  schema.sql          # Database schema
+  seed_data.py        # Generates realistic fake data
+  inject_bad_data.py  # Injects known bad rows for testing data quality checks
+  run_eval.py         # Runs the evaluation suite
 tests/
-  eval_questions.py  # Evaluation question set
-docker-compose.yml   # PostgreSQL container
+  eval_questions.py   # Evaluation question set
+docker-compose.yml     # PostgreSQL container
 ```
