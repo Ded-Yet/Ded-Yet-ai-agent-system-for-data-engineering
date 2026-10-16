@@ -5,22 +5,20 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from agents.sql_agent import ask as ask_sql
 from agents.log_agent import get_latest_log_entry, explain_quality_report
+from agents.router_agent import route
 
 
 def main():
     print("AI Agent System for Data Engineering")
-    print("1. Ask a question about the store data")
-    print("2. Get a data quality report")
-    choice = input("Choose (1 or 2): ").strip()
+    user_input = input("What would you like to know? ")
 
-    if choice == "1":
-        question = input("Ask a question about the store: ")
-        print(ask_sql(question))
-    elif choice == "2":
+    destination = route(user_input)
+
+    if destination == "sql":
+        print(ask_sql(user_input))
+    else:
         entry = get_latest_log_entry()
         print(explain_quality_report(entry))
-    else:
-        print("Invalid choice.")
 
 
 if __name__ == "__main__":
