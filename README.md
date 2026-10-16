@@ -93,27 +93,37 @@ Dr. Holly Nunez spent the most money, with a total expenditure of $14,865.70.
 
 ## Evaluation
 
-The SQL agent is tested against a set of 20 hand-written questions covering counts, filters, joins, and aggregations. Each question has a known-correct SQL query; the agent's generated SQL is run and its result compared against the expected result.
+**SQL Agent** — tested against 20 hand-written questions covering counts, filters, joins, and aggregations. Each question has a known-correct SQL query; the agent's generated SQL is run and its result compared against the expected result.
 
 ```bash
 python scripts/run_eval.py
 ```
 
-**Results:** 20/20 (100%) on the current evaluation set.
+Typically scores 90-100% (19-20/20) — Gemini's SQL generation isn't fully deterministic, so results vary slightly between runs.
+
+**Router Agent** — tested against 8 example questions to verify it correctly classifies requests as either a SQL question or a data quality question.
+
+```bash
+python scripts/run_router_eval.py
+```
+
+Scores 8/8 (100%) on the current test set.
 
 ## Project structure
 
 ```
 src/
-  main.py        # Unified entry point, routes to either agent
-  agents/        # AI agents (SQL generation, result explanation, log analysis)
+  main.py        # Unified entry point with automatic routing
+  agents/        # AI agents (SQL generation, result explanation, log analysis, routing)
   pipelines/     # Data quality check pipeline
 scripts/
   schema.sql          # Database schema
   seed_data.py        # Generates realistic fake data
   inject_bad_data.py  # Injects known bad rows for testing data quality checks
-  run_eval.py         # Runs the evaluation suite
+  run_eval.py         # Runs the SQL agent evaluation suite
+  run_router_eval.py  # Runs the router agent evaluation suite
 tests/
-  eval_questions.py   # Evaluation question set
+  eval_questions.py        # SQL agent evaluation questions
+  router_eval_questions.py # Router agent evaluation questions
 docker-compose.yml     # PostgreSQL container
 ```
