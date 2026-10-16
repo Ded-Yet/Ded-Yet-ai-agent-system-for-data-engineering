@@ -111,6 +111,15 @@ python scripts/run_router_eval.py
 
 Scores 8/8 (100%) on the current test set.
 
+
+**RAG Agent** — tested against 5 questions about table/column meaning, checking whether the answer contains the expected key facts.
+
+```bash
+python scripts/run_rag_eval.py
+```
+
+Scores 5/5 (100%) on the current test set.
+
 ## Project structure
 
 ```
