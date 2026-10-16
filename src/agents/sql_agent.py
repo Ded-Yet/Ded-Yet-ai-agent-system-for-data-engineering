@@ -22,11 +22,16 @@ customers(customer_id, name, email, signup_date)
 products(product_id, name, category, price)
 orders(order_id, customer_id, order_date, status)
 order_items(order_item_id, order_id, product_id, quantity, price_at_purchase)
+customer_summary(customer_id, total_orders, total_spent, avg_order_value, last_order_date)
 
 Relationships:
 orders.customer_id -> customers.customer_id
 order_items.order_id -> orders.order_id
 order_items.product_id -> products.product_id
+customer_summary.customer_id -> customers.customer_id
+
+Notes:
+customer_summary is a precomputed table with aggregated stats per customer (total orders, total spent, average order value, last order date). Prefer using this table directly for questions about customer spending/order totals instead of joining orders and order_items manually.
 """
 
 
