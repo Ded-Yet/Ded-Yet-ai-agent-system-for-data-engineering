@@ -1,6 +1,6 @@
 # AI Agent System for Data Engineering
 
-A multi-agent system that answers natural language questions about a database and monitors data quality, built on top of a real data engineering pipeline (PostgreSQL, Docker, seeded sample data).
+A multi-agent system that answers natural language questions about a database, explains data quality issues, and looks up data definitions — built on top of a real data engineering pipeline (PostgreSQL, Docker, seeded sample data).
 
 ## What it does
 
@@ -14,7 +14,7 @@ This system has four agents working together: a router that classifies incoming 
 
 **2. Log Analysis Agent** — reads the results of automated data quality checks (nulls, negative prices, invalid references, etc.) and summarizes them in plain English, the way an engineer would report issues to a non-technical manager.
 
-**3. Router Agent** — classifies incoming questions and automatically routes them to the SQL agent or the log analysis agent, so the user never has to pick manually.
+**3. Router Agent** — classifies incoming questions and automatically routes them to the SQL agent, the log analysis agent, or the RAG agent, so the user never has to pick manually.
 
 **4. RAG Agent** — answers questions about what tables and columns mean (e.g. "what does the status column mean?") by retrieving the relevant section from a data dictionary and generating an answer grounded in that context, rather than guessing.
 
@@ -23,19 +23,25 @@ This project is built around the idea that **AI agents are only as good as the d
 ## Architecture
 
 ```
-Question (English)
+User input
       │
       ▼
- [Schema context] ──► Gemini API ──► Generated SQL
+Router Agent ──► decides: sql / quality / dictionary
       │
-      ▼
- PostgreSQL (Docker) ──► Query result
+      ├──► SQL Agent
+      │      [Schema context] ──► Gemini API ──► Generated SQL
+      │              │
+      │              ▼
+      │      PostgreSQL (Docker) ──► Query result ──► Gemini API ──► Answer
       │
-      ▼
- Gemini API ──► Natural language answer
+      ├──► Log Analysis Agent
+      │      quality_log.json ──► Gemini API ──► Plain-English report
+      │
+      └──► RAG Agent
+             data_dictionary.md ──► Retrieve relevant section ──► Gemini API ──► Answer
 
 
-Data quality checks ──► quality_log.json ──► Gemini API ──► Plain-English report
+Pipeline (run separately): Seed data ──► Data quality checks ──► Transform customer_summary
 ```
 
 ## Tech stack
@@ -71,6 +77,7 @@ docker compose up -d
 ### 3. Load the schema and sample data
 ```bash
 Get-Content scripts/schema.sql | docker exec -i de_agent_db psql -U agent_user -d agent_db
+Get-Content scripts/transform_schema.sql | docker exec -i de_agent_db psql -U agent_user -d agent_db
 python scripts/seed_data.py
 ```
 
@@ -93,6 +100,16 @@ Ask a question about the store: Which customer spent the most money?
 Dr. Holly Nunez spent the most money, with a total expenditure of $14,865.70.
 ```
 
+## Pipeline
+
+The full data pipeline — ingest, validate, transform — can be run as a single sequence:
+
+```bash
+python src/pipelines/run_pipeline.py
+```
+
+This runs each stage in order (seed data → data quality checks → transform customer summary), times each step, and stops immediately if a step fails rather than continuing with bad data. It mirrors the core concept behind orchestration tools like Airflow, without the scheduling layer.
+
 ## Evaluation
 
 **SQL Agent** — tested against 20 hand-written questions covering counts, filters, joins, and aggregations. Each question has a known-correct SQL query; the agent's generated SQL is run and its result compared against the expected result.
@@ -103,14 +120,13 @@ python scripts/run_eval.py
 
 Typically scores 90-100% (19-20/20) — Gemini's SQL generation isn't fully deterministic, so results vary slightly between runs.
 
-**Router Agent** — tested against 8 example questions to verify it correctly classifies requests as either a SQL question or a data quality question.
+**Router Agent** — tested against 8 example questions to verify it correctly classifies requests as a SQL question, a data quality question, or a data dictionary question.
 
 ```bash
 python scripts/run_router_eval.py
 ```
 
 Scores 8/8 (100%) on the current test set.
-
 
 **RAG Agent** — tested against 5 questions about table/column meaning, checking whether the answer contains the expected key facts.
 
@@ -125,16 +141,28 @@ Scores 5/5 (100%) on the current test set.
 ```
 src/
   main.py        # Unified entry point with automatic routing
-  agents/        # AI agents (SQL generation, result explanation, log analysis, routing)
-  pipelines/     # Data quality check pipeline
+  agents/
+    sql_agent.py       # SQL generation, execution, and answer generation
+    log_agent.py        # Data quality report summarization
+    rag_agent.py         # Data dictionary retrieval and Q&A
+    router_agent.py     # Classifies and routes incoming questions
+  pipelines/
+    data_quality_checks.py          # Runs automated data quality checks
+    transform_customer_summary.py   # Builds the customer_summary table
+    run_pipeline.py                 # Runs the full pipeline in sequence
+docs/
+  data_dictionary.md   # Table/column definitions used by the RAG agent
 scripts/
-  schema.sql          # Database schema
-  seed_data.py        # Generates realistic fake data
-  inject_bad_data.py  # Injects known bad rows for testing data quality checks
-  run_eval.py         # Runs the SQL agent evaluation suite
-  run_router_eval.py  # Runs the router agent evaluation suite
+  schema.sql              # Database schema
+  transform_schema.sql    # customer_summary table schema
+  seed_data.py             # Generates realistic fake data
+  inject_bad_data.py       # Injects known bad rows for testing data quality checks
+  run_eval.py               # Runs the SQL agent evaluation suite
+  run_router_eval.py        # Runs the router agent evaluation suite
+  run_rag_eval.py            # Runs the RAG agent evaluation suite
 tests/
-  eval_questions.py        # SQL agent evaluation questions
-  router_eval_questions.py # Router agent evaluation questions
+  eval_questions.py           # SQL agent evaluation questions
+  router_eval_questions.py    # Router agent evaluation questions
+  rag_eval_questions.py        # RAG agent evaluation questions
 docker-compose.yml     # PostgreSQL container
 ```
