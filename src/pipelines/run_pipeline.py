@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 
 STEPS = [
+    ("Seed data", "scripts/seed_data.py"),
     ("Data quality checks", "src/pipelines/data_quality_checks.py"),
     ("Transform customer summary", "src/pipelines/transform_customer_summary.py"),
 ]
