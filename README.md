@@ -4,7 +4,7 @@ A multi-agent system that answers natural language questions about a database an
 
 ## What it does
 
-This system has three agents working together: a router that classifies incoming questions, and two specialized agents that handle them.
+This system has four agents working together: a router that classifies incoming questions, and three specialized agents that handle them.
 
 **1. SQL Agent** — ask a plain-English question about an e-commerce dataset, e.g. *"Which customer has spent the most money?"*, and it:
 1. Understands the database schema
@@ -15,6 +15,8 @@ This system has three agents working together: a router that classifies incoming
 **2. Log Analysis Agent** — reads the results of automated data quality checks (nulls, negative prices, invalid references, etc.) and summarizes them in plain English, the way an engineer would report issues to a non-technical manager.
 
 **3. Router Agent** — classifies incoming questions and automatically routes them to the SQL agent or the log analysis agent, so the user never has to pick manually.
+
+**4. RAG Agent** — answers questions about what tables and columns mean (e.g. "what does the status column mean?") by retrieving the relevant section from a data dictionary and generating an answer grounded in that context, rather than guessing.
 
 This project is built around the idea that **AI agents are only as good as the data engineering underneath them** — so the focus is on a real pipeline (schema, seeded data, data quality checks, evaluation) rather than just an LLM wrapper.
 
@@ -82,7 +84,7 @@ GEMINI_API_KEY=your_key_here
 ```bash
 python src/main.py
 ```
-Just type what you want to know — a router agent automatically figures out whether it's a question about the store data or a data quality check, and routes it to the right agent.
+Just type what you want to know — a router agent automatically figures out whether it's a question about the store data, a data quality check, or a question about what a column/table means, and routes it to the right agent.
 
 ## Example
 
