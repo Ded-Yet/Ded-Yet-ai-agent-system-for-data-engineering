@@ -100,6 +100,14 @@ Ask a question about the store: Which customer spent the most money?
 Dr. Holly Nunez spent the most money, with a total expenditure of $14,865.70.
 ```
 
+## Web UI
+
+A simple Streamlit interface is available for demoing the system in a browser instead of the terminal:
+
+```bash
+streamlit run app.py
+```
+
 ## Pipeline
 
 The full data pipeline — ingest, validate, transform — can be run as a single sequence:
