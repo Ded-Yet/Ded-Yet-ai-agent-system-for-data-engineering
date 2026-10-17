@@ -16,6 +16,16 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
+# Clear existing data first so re-running this script doesn't create duplicates.
+# Order matters: delete child tables before parent tables (foreign key constraints).
+cur.execute("DELETE FROM customer_summary;")
+cur.execute("DELETE FROM order_items;")
+cur.execute("DELETE FROM orders;")
+cur.execute("DELETE FROM products;")
+cur.execute("DELETE FROM customers;")
+conn.commit()
+print("Cleared existing data.")
+
 NUM_CUSTOMERS = 50
 NUM_PRODUCTS = 30
 NUM_ORDERS = 200
