@@ -1,4 +1,5 @@
 import json
+import sys
 from datetime import datetime, timezone
 
 import psycopg2
@@ -55,9 +56,14 @@ def main():
     conn.close()
 
     print("Data quality check complete:")
+    total_issues = 0
     for r in results:
+        total_issues += r["issue_count"]
         print(f"  {r['check']}: {r['issue_count']} issue(s)")
+
+    return total_issues
 
 
 if __name__ == "__main__":
-    main()
+    issues = main()
+    sys.exit(1 if issues else 0)
