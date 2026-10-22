@@ -143,6 +143,12 @@ Monitor runs at `http://localhost:8080`.
 
 ![Airflow graph view](docs/airflow_graph.png)
 
+### Failure handling
+
+`data_quality_checks.py` exits with a non-zero code when any check finds issues, so Airflow marks the task as failed and the downstream transform never runs. A second DAG, `de_agent_pipeline_bad_data`, demonstrates this: it seeds the database, injects known bad rows, and the pipeline stops at the quality check.
+
+![Airflow failure demo](docs/airflow_failure_demo.png)
+
 ## Evaluation
 
 **SQL Agent** — tested against 20 hand-written questions covering counts, filters, joins, and aggregations. Each question has a known-correct SQL query; the agent's generated SQL is run and its result compared against the expected result.
@@ -185,6 +191,7 @@ src/
     run_pipeline.py                 # Runs the full pipeline in sequence
 dags/
   de_agent_pipeline.py    # Airflow DAG orchestrating the pipeline
+    de_agent_pipeline_bad_data.py    # Failure demo: injects bad data, pipeline stops at quality check
 docs/
   data_dictionary.md   # Table/column definitions used by the RAG agent
 scripts/
