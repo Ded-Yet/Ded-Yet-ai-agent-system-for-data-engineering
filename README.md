@@ -41,7 +41,7 @@ Router Agent ──► decides: sql / quality / dictionary
              data_dictionary.md ──► Retrieve relevant section ──► Gemini API ──► Answer
 
 
-Pipeline (run separately): Seed data ──► Data quality checks ──► Transform customer_summary
+Pipeline (run separately or via Airflow): Seed data ──► Data quality checks ──► Transform customer_summary
 ```
 
 ## Tech stack
@@ -51,6 +51,7 @@ Pipeline (run separately): Seed data ──► Data quality checks ──► Tra
 - **Language:** Python
 - **Testing:** pytest
 - **Data generation:** Faker
+- **Orchestration:** Apache Airflow 3.1 (WSL2)
 
 ## Setup
 
@@ -61,8 +62,9 @@ Pipeline (run separately): Seed data ──► Data quality checks ──► Tra
 
 ### 1. Clone and set up the environment
 ```bash
-git clone <your-repo-url>
-cd ai-data-engineering-agent
+git clone https://github.com/Ded-Yet/Ded-Yet-ai-agent-system-for-data-engineering.git
+cd Ded-Yet-ai-agent-system-for-data-engineering
+
 python -m venv .venv
 .venv\Scripts\activate      # Windows
 pip install -e .
@@ -116,7 +118,30 @@ The full data pipeline — ingest, validate, transform — can be run as a singl
 python src/pipelines/run_pipeline.py
 ```
 
-This runs each stage in order (seed data → data quality checks → transform customer summary), times each step, and stops immediately if a step fails rather than continuing with bad data. It mirrors the core concept behind orchestration tools like Airflow, without the scheduling layer.
+This runs each stage in order (seed data → data quality checks → transform customer summary), times each step, and stops immediately if a step fails rather than continuing with bad data. The same scripts are also orchestrated by an Airflow DAG (see below).
+
+### Airflow orchestration
+
+The pipeline is also orchestrated by an Apache Airflow 3.1 DAG, defined in `dags/de_agent_pipeline.py`:
+
+`seed_data` → `run_quality_checks` → `transform_customer_summary`
+
+Each task is a `BashOperator` that runs the existing script from the project root, so the same code works standalone, through `run_pipeline.py`, or under Airflow.
+
+**Setup**
+- Airflow runs in WSL2 (Ubuntu) in its own Python 3.12 virtual environment, since Airflow 3.1 does not support Python 3.14.
+- Install the pipeline dependencies into that venv: `pip install psycopg2-binary python-dotenv faker`
+- Copy the DAG into `~/airflow/dags/` and start Airflow with `airflow standalone`.
+- PostgreSQL runs in Docker Desktop and is reached from WSL at `localhost:5432`.
+
+**Run it**
+```bash
+airflow dags unpause de_agent_pipeline
+airflow dags trigger de_agent_pipeline
+```
+Monitor runs at `http://localhost:8080`.
+
+![Airflow graph view](docs/airflow_graph.png)
 
 ## Evaluation
 
@@ -158,6 +183,8 @@ src/
     data_quality_checks.py          # Runs automated data quality checks
     transform_customer_summary.py   # Builds the customer_summary table
     run_pipeline.py                 # Runs the full pipeline in sequence
+dags/
+  de_agent_pipeline.py    # Airflow DAG orchestrating the pipeline
 docs/
   data_dictionary.md   # Table/column definitions used by the RAG agent
 scripts/
