@@ -7,7 +7,7 @@ PY = "$HOME/airflow/airflow-venv/bin/python"
 
 @dag(
     dag_id="de_agent_pipeline",
-    schedule=None,
+    schedule="@daily",
     start_date=datetime(2026, 1, 1),
     catchup=False,
     tags=["de-agent"],
