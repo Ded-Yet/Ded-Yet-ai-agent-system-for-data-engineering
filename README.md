@@ -68,7 +68,7 @@ cd Ded-Yet-ai-agent-system-for-data-engineering
 python -m venv .venv
 .venv\Scripts\activate      # Windows
 pip install -e .
-pip install faker psycopg2-binary google-genai python-dotenv
+pip install faker psycopg2-binary google-genai python-dotenv streamlit pytest
 ```
 
 ### 2. Start the database
