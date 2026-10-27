@@ -124,13 +124,15 @@ This runs each stage in order (seed data → data quality checks → transform c
 
 The pipeline is also orchestrated by an Apache Airflow 3.1 DAG, defined in `dags/de_agent_pipeline.py`:
 
-`seed_data` → `run_quality_checks` → `transform_customer_summary`
+`seed_data` → `run_quality_checks` → `transform_customer_summary` → `run_sql_eval`
 
 The DAG runs daily (`schedule="@daily"`) and can also be triggered manually. Each task is a `BashOperator` that runs the existing script from the project root, so the same code works standalone, through `run_pipeline.py`, or under Airflow.
 
+The last task runs the SQL agent evaluation (20 Gemini calls, about 7 minutes) and logs the accuracy. It needs `GEMINI_API_KEY` in the project's `.env`, and `google-genai` installed in the Airflow venv.
+
 **Setup**
 - Airflow runs in WSL2 (Ubuntu) in its own Python 3.12 virtual environment, since Airflow 3.1 does not support Python 3.14.
-- Install the pipeline dependencies into that venv: `pip install psycopg2-binary python-dotenv faker`
+- Install the pipeline dependencies into that venv: `pip install psycopg2-binary python-dotenv faker google-genai`
 - Copy the DAG into `~/airflow/dags/` and start Airflow with `airflow standalone`.
 - Edit the `PROJECT` path at the top of the DAG so it points to your local clone (from WSL, a Windows path looks like `/mnt/c/Users/<you>/...`).
 - PostgreSQL runs in Docker Desktop and is reached from WSL at `localhost:5432`. Docker Desktop and the `de_agent_db` container must be running before you trigger the DAG.

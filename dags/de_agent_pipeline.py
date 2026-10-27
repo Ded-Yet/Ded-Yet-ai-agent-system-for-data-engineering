@@ -25,6 +25,10 @@ def de_agent_pipeline():
         task_id="transform_customer_summary",
         bash_command=f'cd "{PROJECT}" && {PY} src/pipelines/transform_customer_summary.py',
     )
-    seed >> quality >> transform
+    evaluate = BashOperator(
+        task_id="run_sql_eval",
+        bash_command=f'cd "{PROJECT}" && {PY} scripts/run_eval.py',
+    )
+    seed >> quality >> transform >> evaluate
 
 de_agent_pipeline()
