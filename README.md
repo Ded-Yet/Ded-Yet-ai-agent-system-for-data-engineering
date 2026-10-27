@@ -126,13 +126,14 @@ The pipeline is also orchestrated by an Apache Airflow 3.1 DAG, defined in `dags
 
 `seed_data` → `run_quality_checks` → `transform_customer_summary`
 
-Each task is a `BashOperator` that runs the existing script from the project root, so the same code works standalone, through `run_pipeline.py`, or under Airflow.
+The DAG runs daily (`schedule="@daily"`) and can also be triggered manually. Each task is a `BashOperator` that runs the existing script from the project root, so the same code works standalone, through `run_pipeline.py`, or under Airflow.
 
 **Setup**
 - Airflow runs in WSL2 (Ubuntu) in its own Python 3.12 virtual environment, since Airflow 3.1 does not support Python 3.14.
 - Install the pipeline dependencies into that venv: `pip install psycopg2-binary python-dotenv faker`
 - Copy the DAG into `~/airflow/dags/` and start Airflow with `airflow standalone`.
-- PostgreSQL runs in Docker Desktop and is reached from WSL at `localhost:5432`.
+- Edit the `PROJECT` path at the top of the DAG so it points to your local clone (from WSL, a Windows path looks like `/mnt/c/Users/<you>/...`).
+- PostgreSQL runs in Docker Desktop and is reached from WSL at `localhost:5432`. Docker Desktop and the `de_agent_db` container must be running before you trigger the DAG.
 
 **Run it**
 ```bash
@@ -141,7 +142,7 @@ airflow dags trigger de_agent_pipeline
 ```
 Monitor runs at `http://localhost:8080`.
 
-![Airflow graph view](docs/airflow_graph.png)
+![Airflow run: all three pipeline tasks succeeded](docs/airflow_graph.png)
 
 ### Failure handling
 
